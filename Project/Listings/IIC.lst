@@ -1,0 +1,181 @@
+C51 COMPILER V9.60.0.0   IIC                                                               06/08/2023 04:30:56 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE IIC
+OBJECT MODULE PLACED IN .\Objects\IIC.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\HARDWARE\IIC\IIC.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\Device\KEY;..\D
+                    -evice\Nixie_tube;..\HARDWARE\IIC;..\HARDWARE\Timer;..\SYSTEM\delay;..\Project) DEBUG OBJECTEXTEND PRINT(.\Listings\IIC.l
+                    -st) TABS(2) OBJECT(.\Objects\IIC.obj)
+
+line level    source
+
+   1          #include "IIC.h"
+*** ERROR C100 IN LINE 29 OF main.h: unprintable character 0xA1 skipped
+*** ERROR C100 IN LINE 29 OF main.h: unprintable character 0xA4 skipped
+*** ERROR C100 IN LINE 29 OF main.h: unprintable character 0xA1 skipped
+*** ERROR C100 IN LINE 29 OF main.h: unprintable character 0xA4 skipped
+   2           //I2C_IO口定义
+   3          sbit SCL=P3^0;
+   4          sbit SDA=P3^1;                         
+   5          uint pwd_numbers=0;     //用于暂存数字密码 后存入密码数组
+   6          
+   7          void Delay1(void)
+   8          {
+   9   1        uchar Delay_t=20;
+  10   1        while( -- Delay_t !=0);
+  11   1      }
+  12          
+  13          void Start(void)   //产生I2C总线的起始信号
+  14            {
+  15   1          SCL= 1;
+  16   1          Delay1();
+  17   1          SDA = 1;
+  18   1          Delay1(); //起始条件建立时间大于4.7us延时
+  19   1          SDA = 0;   //发送起始信号
+  20   1          Delay1();
+  21   1          SCL = 0;   //钳住工2C总线，准备发送或接收数据
+  22   1          Delay1();
+  23   1      }
+  24          void Stop(void)       //产生I2C总线的停止信号
+  25          {
+  26   1          uchar t =20;  //I2C总线停止后在下一次开始之前的等待时间
+  27   1          SDA = 0 ;     //发送结束条件的数据信号
+  28   1          Delay1();
+  29   1          SCL= 1;       //发送结束条件的时钟信号
+  30   1          Delay1();
+  31   1          SDA = 1;      //发送I2C总线结束信号
+  32   1          Delay1 ();
+  33   1          while ( --t !=0 );  //在下一次产生start之前，要加一定的延时
+  34   1      }
+  35          void Write(uint dat)    //向I2C总线写1个字节的数据
+  36          {
+  37   1          uchar t ;
+  38   1          for(t=0;t<8;t++)
+  39   1          {
+  40   2            SDA =(bit)(dat & 0x80);
+  41   2            Delay1();
+  42   2            SCL= 1;//置时钟线为高，通知被控器开始接收数据位
+  43   2            Delay1();
+  44   2            SCL = 0;
+  45   2            Delay1();
+  46   2            dat <<= 1;
+  47   2          } 
+  48   1      }
+  49            
+C51 COMPILER V9.60.0.0   IIC                                                               06/08/2023 04:30:56 PAGE 2   
+
+  50          uchar Read(void)    //由从机读取1个字节的数据
+  51          {
+  52   1            uint dat=0,t;
+  53   1            bit temp;
+  54   1            Delay1();
+  55   1            Delay1();
+  56   1            SDA = 1;            //在读取数据之前，要把SDA拉高
+  57   1            Delay1();
+  58   1            for (t=0;t<8;t++)
+  59   1            {
+  60   2              SCL = 0;    /*接受数据*/
+  61   2              Delay1();
+  62   2              SCL =1;     //置时钟线为高使数据线上升沿数据有效
+  63   2              Delay1();
+  64   2              temp =SDA;
+  65   2              dat <<=1;
+  66   2              if(temp==1)
+  67   2                dat |= 0x01;
+  68   2            }
+  69   1            SCL=0;
+  70   1            Delay1();
+  71   1            return dat;
+  72   1      }
+  73          
+  74          void GetAck(void)//读取从机应答信号
+  75          {
+  76   1          uchar i;
+  77   1          Delay1();
+  78   1          SDA = 1; //8位发送完后释放数据线，准备接收应答信号释放总线
+  79   1          Delay1();
+  80   1          SCL =1; //接受数据
+  81   1          Delay1();
+  82   1          while ((SDA==1)&&(i<250))i++;//在规定时间内等待SDA 变为0
+  83   1          SCL =0; //清时钟线,钳住12C总线以便继续接收
+  84   1          Delay1();
+  85   1      }
+  86          void PutAck(bit ack) //主机应答或非应答信号（ack=0;应答信号，ack=1;非应答信号)
+  87          {
+  88   1          SDA =ack; //发出应答或非应答信号
+  89   1          Delay1();
+  90   1          SCL = 1;  //应答
+  91   1          Delay1();
+  92   1          SCL= 0;   //清时钟线,钳住I2C总线以便继续接收，继续占用
+  93   1          Delay1(); //等待时钟线的释放
+  94   1      }
+  95          
+  96          //主机通过I2c总线向从机发送多个字节的数据
+  97          //形参依次为:从机SLA地址、从机子地址、数据字节数、要发送的数据
+  98          void Write_E2prom(uchar SlaveAddr,uchar SubAddr,uchar Size,uint *dat)
+  99          {
+ 100   1          SlaveAddr &= 0xFE;  //确保从机地址最低位是0
+ 101   1          Start();//启动I2C总线
+ 102   1          Write(SlaveAddr); //发送从机地址
+ 103   1          GetAck() ;//读取从机应答信号
+ 104   1          Write(SubAddr);//发送子地址
+ 105   1          GetAck(); //读取从机应答信号
+ 106   1          do //发送数据
+ 107   1          {
+ 108   2              Write(*dat++);
+ 109   2              GetAck();//读取从机应管信号
+ 110   2          }while ( --Size !=0 );//如发送完毕，结束发送
+ 111   1          Stop(); //停止I2c总线
+C51 COMPILER V9.60.0.0   IIC                                                               06/08/2023 04:30:56 PAGE 3   
+
+ 112   1      }
+ 113          
+ 114          //主机通过I2C总线从从机接收多个字节的教据
+ 115          //形参依次为:从机SLA 地址、从机子地址、数据字节数、保存接收到的数据
+ 116          void Read_E2prom(uchar SlaveAddr, uchar SubAddr,uchar Size, uint *dat)
+ 117          {
+ 118   1          SlaveAddr &= 0xFE;  //确保最低位是0
+ 119   1          Start();            //启动I2c总线
+ 120   1          Write(SlaveAddr);   //发送从机写地址
+ 121   1          GetAck();           //读取从机应答信号
+ 122   1          Write(SubAddr);     //发送子地址
+ 123   1          GetAck();           //读取从机应答信号
+ 124   1          Start();            //发送重复起始条件
+ 125   1          SlaveAddr |=0x01;   //改为读地址
+ 126   1          Write(SlaveAddr) ;  //发送从机读地址
+ 127   1          GetAck();           //读取从机应答信号
+ 128   1          for (;;)//接收数据
+ 129   1          {
+ 130   2              *dat++ = Read();
+ 131   2              if ( --Size == 0 )//如接收完毕,结束接收
+ 132   2              {
+ 133   3                PutAck(1);//通知从机的非应答信号
+ 134   3                break;
+ 135   3              }
+ 136   2              PutAck(0);//通知从机的应答信号  
+ 137   2          }
+ 138   1          Stop();//停止I2c总线
+ 139   1      }
+ 140          
+ 141          void I2C_Read_pwd(void)
+ 142          {
+ 143   1         Read_E2prom(SLAVE_ADDR,E2PROM_ADDR_1,1,&pwd_numbers);
+ 144   1         cur_pwd[1]=pwd_numbers/10;   //十位，
+ 145   1         cur_pwd[2]=pwd_numbers%10;   //个位，
+ 146   1        
+ 147   1         Read_E2prom(SLAVE_ADDR,E2PROM_ADDR_2,1,&pwd_numbers);
+ 148   1         cur_pwd[3]=pwd_numbers/10;   //十位
+ 149   1         cur_pwd[4]=pwd_numbers%10;   //个位 
+ 150   1      }
+ 151          void I2C_Write_pwd(void)
+ 152          {
+ 153   1          pwd_numbers=cur_pwd[1];
+ 154   1          pwd_numbers=pwd_numbers*10+cur_pwd[2];
+ 155   1          Write_E2prom(SLAVE_ADDR,E2PROM_ADDR_1,1,&pwd_numbers);
+ 156   1        
+ 157   1          pwd_numbers=cur_pwd[3];
+ 158   1          pwd_numbers=pwd_numbers*10+cur_pwd[4];
+ 159   1          Write_E2prom(SLAVE_ADDR,E2PROM_ADDR_2,1,&pwd_numbers);
+ 160   1      }
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  4 ERROR(S)

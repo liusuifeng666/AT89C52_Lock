@@ -1,0 +1,1 @@
+"..\HARDWARE\usart\USART.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(..\Device\KEY;..\Device\Nixie_tube;..\HARDWARE\IIC;..\HARDWARE\Timer;..\SYSTEM\delay;..\HARDWARE\usart) DEBUG OBJECTEXTEND PRINT(.\Listings\USART.lst) TABS (2) OBJECT(.\Objects\USART.obj)

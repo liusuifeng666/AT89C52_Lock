@@ -1,0 +1,9 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj",
+".\Objects\Delay.obj",
+".\Objects\Timer.obj",
+".\Objects\IIC.obj",
+".\Objects\keyboard.obj",
+".\Objects\Nixie_tube.obj" 
+TO ".\Objects\Coded_lock" 
+PRINT(".\Listings\Coded_lock.m51") RAMSIZE(256) 

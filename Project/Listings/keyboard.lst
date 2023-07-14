@@ -1,0 +1,58 @@
+C51 COMPILER V9.60.0.0   KEYBOARD                                                          06/08/2023 04:30:56 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE KEYBOARD
+OBJECT MODULE PLACED IN .\Objects\keyboard.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\Device\KEY\keyboard.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\Device\KEY;.
+                    -.\Device\Nixie_tube;..\HARDWARE\IIC;..\HARDWARE\Timer;..\SYSTEM\delay;..\Project) DEBUG OBJECTEXTEND PRINT(.\Listings\ke
+                    -yboard.lst) TABS(2) OBJECT(.\Objects\keyboard.obj)
+
+line level    source
+
+   1          #include "keyboard.h"
+   2          #include "Nixie_tube.h"
+   3          #include "main.h"
+*** ERROR C100 IN LINE 29 OF main.h: unprintable character 0xA1 skipped
+*** ERROR C100 IN LINE 29 OF main.h: unprintable character 0xA4 skipped
+*** ERROR C100 IN LINE 29 OF main.h: unprintable character 0xA1 skipped
+*** ERROR C100 IN LINE 29 OF main.h: unprintable character 0xA4 skipped
+   4          
+   5          #define KEY_Value P2      //按键值对应的寄存器IO
+   6          #define KEY_Column 0x10   //列最低位 0001 0000
+   7          
+   8          int key_flag=0;
+   9          
+  10          /*KEY键值 11101110 ~ 01110111*/
+  11          char key_buf[]= {0xee,0xde,0xbe,0x7e,0xed,0xdd,0xbd,0x7d, 
+  12                           0xeb,0xdb,0xbb,0x7b,0xe7,0xd7,0xb7,0x77};   
+  13          //矩阵按键扫描函数
+  14          void GetKey(void)
+  15          {
+  16   1        char i=0,j=0;
+  17   1        while(i<4)
+  18   1        {
+  19   2          /*
+  20   2            *从列最低位逐渐遍历到最高位,
+  21   2            *由于按键是低电平检测我们进行取反也就是 0xef-7f 11101111-01111111
+  22   2          */
+  23   2          KEY_Value=~(KEY_Column<<i); 
+  24   2          for(j=0;j<16;j++) 
+  25   2          {
+  26   3            if(key_buf[j]==KEY_Value)   //查到对应键值
+  27   3            { 
+  28   4              Delay(10);              //抖动处理 
+  29   4              if(key_buf[j]!=KEY_Value)   //第二次查询 等待释放 
+  30   4              {
+  31   5                key_flag=j+1;           //按照题目要求K1-K16 J以0开始 结果+1即可
+  32   5                i=4;
+  33   5                break;
+  34   5              }
+  35   4            }
+  36   3          }
+  37   2          i++;
+  38   2        }
+  39   1      }
+  40          
+  41          
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  4 ERROR(S)

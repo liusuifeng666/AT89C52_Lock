@@ -1,0 +1,80 @@
+C51 COMPILER V9.60.0.0   NIXIE_TUBE                                                        06/08/2023 04:30:56 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE NIXIE_TUBE
+OBJECT MODULE PLACED IN .\Objects\Nixie_tube.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\Device\Nixie_tube\Nixie_tube.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\Dev
+                    -ice\KEY;..\Device\Nixie_tube;..\HARDWARE\IIC;..\HARDWARE\Timer;..\SYSTEM\delay;..\Project) DEBUG OBJECTEXTEND PRINT(.\Li
+                    -stings\Nixie_tube.lst) TABS(2) OBJECT(.\Objects\Nixie_tube.obj)
+
+line level    source
+
+   1          #include "Nixie_tube.h"
+   2          #include "main.h"
+*** ERROR C100 IN LINE 29 OF main.h: unprintable character 0xA1 skipped
+*** ERROR C100 IN LINE 29 OF main.h: unprintable character 0xA4 skipped
+*** ERROR C100 IN LINE 29 OF main.h: unprintable character 0xA1 skipped
+*** ERROR C100 IN LINE 29 OF main.h: unprintable character 0xA4 skipped
+   3          #define wela P0   //申明P3口前四位位位选
+   4          #define Duan P1   //申明P1为段选
+   5          
+   6          uchar code table_yan[]={  0xC0,0xF9,0xA4,0xB0,0x99,
+   7                                    0x92,0x82,0xF8,0x80,0x90}; //共阳数码管码表
+   8          uchar code table_yin[]={  0x3f,0x06,0x5b,0x4f,0x66,
+   9                                    0x6d,0x7d,0x07,0x7f,0x6f}; //共阴数码管码表
+  10          /*显示ON字库函数*/
+  11          void DispLay_ON(void)
+  12          {
+  13   1        int i=0;
+  14   1        for(i=0;i<2;i++)
+  15   1        {
+  16   2          if(i==0)
+  17   2              Duan=0x5C;        //选择相应的码
+  18   2          else if(i==1)
+  19   2              Duan=0x54;        //选择相应的码
+  20   2           wela&=~(0x01 << i);  //选择哪一位数码管显示
+  21   2           Delay(1); 
+  22   2           wela|=(0x01 << i);   //每次显示后需要清除一下相应的位
+  23   2        }
+  24   1      }
+  25          /*显示ERR字库函数*/
+  26          void DispLay_ERR()
+  27          {
+  28   1        int i=0;
+  29   1        for(i=0;i<3;i++)
+  30   1        {
+  31   2          if(i==0)
+  32   2              Duan=0x79;        //选择相应的码
+  33   2          else 
+  34   2              Duan=0x77;        //选择相应的码
+  35   2           wela&=~(0x01 << i);  //选择哪一位数码管显示
+  36   2           Delay(1); 
+  37   2           wela|=(0x01 << i);   //每次显示后需要清除一下相应的位
+  38   2        }
+  39   1      }
+  40          /*
+  41            *数码管实时显示函数
+  42            *参数：int str_num[]、int input_num
+  43            *int str_num[]:当前输入的数值数组
+  44            *int str_num[]:当前输入的数值数组索引下标
+  45          */
+  46          void Display(int str_num[],int input_num)
+  47          {
+  48   1        int i=0;
+  49   1        if(input_num==0)                      //没有输入任何值
+C51 COMPILER V9.60.0.0   NIXIE_TUBE                                                        06/08/2023 04:30:56 PAGE 2   
+
+  50   1        {
+  51   2          LED_displayOFF();             //数码管黑屏
+  52   2        }
+  53   1        for(i=0;i<input_num;i++)              //小于输入的密码个数
+  54   1        {
+  55   2          Duan=table_yin[str_num[i+1]]; //选择相应的码
+  56   2          wela&=~(0x01 << i);           //选择哪一位数码管显示
+  57   2          Delay(1);     
+  58   2          wela|=(0x01 << i);            //每次显示后需要清除一下相应的位
+  59   2        }
+  60   1      }
+  61          
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  4 ERROR(S)

@@ -1,0 +1,1 @@
+"..\Device\Nixie_tube\Nixie_tube.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(..\Device\KEY;..\Device\Nixie_tube;..\HARDWARE\IIC;..\HARDWARE\Timer;..\SYSTEM\delay;..\Project) DEBUG OBJECTEXTEND PRINT(.\Listings\Nixie_tube.lst) TABS (2) OBJECT(.\Objects\Nixie_tube.obj)
